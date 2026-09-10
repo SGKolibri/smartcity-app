@@ -50,13 +50,18 @@ class BrutButton extends StatelessWidget {
           const SizedBox(width: BrutSpacing.sm),
         ],
         if (!loading)
-          Text(
-            label.toUpperCase(),
-            style: BrutType.mono(
-              13,
-              weight: FontWeight.w700,
-              color: fg,
-              letterSpacing: 1,
+          Flexible(
+            child: Text(
+              label.toUpperCase(),
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              textAlign: TextAlign.center,
+              style: BrutType.mono(
+                13,
+                weight: FontWeight.w700,
+                color: fg,
+                letterSpacing: 1,
+              ),
             ),
           ),
       ],

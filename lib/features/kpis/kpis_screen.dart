@@ -5,8 +5,8 @@ import '../../core/theme/brut_colors.dart';
 import '../../core/theme/brut_spacing.dart';
 import '../../shared/models/models.dart';
 import '../../shared/widgets/widgets.dart';
+import '../detalhe_poste/detalhe_poste_screen.dart';
 import '../mapa/mapa_providers.dart';
-import '../shell/shell_providers.dart';
 import 'kpis_providers.dart';
 import 'widgets/distribuicao_status.dart';
 import 'widgets/grafico_comparativo.dart';
@@ -24,9 +24,14 @@ class KpisScreen extends ConsumerWidget {
     await ref.read(kpisProvider.future);
   }
 
-  void _verNoMapa(WidgetRef ref, String posteId) {
+  void _abrirPoste(BuildContext context, WidgetRef ref, String posteId) {
+    // Mantém o mapa sincronizado e abre o detalhe.
     ref.read(posteSelecionadoProvider.notifier).selecionar(posteId);
-    ref.read(homeTabProvider.notifier).ir(HomeTab.mapa);
+    Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (_) => DetalhePosteScreen(posteId: posteId),
+      ),
+    );
   }
 
   @override
@@ -77,7 +82,7 @@ class KpisScreen extends ConsumerWidget {
               onRetry: () => ref.invalidate(maiorConsumoProvider),
               builder: (r) => RankingConsumoWidget(
                 ranking: r,
-                onTapPoste: (id) => _verNoMapa(ref, id),
+                onTapPoste: (id) => _abrirPoste(context, ref, id),
               ),
             ),
           ),

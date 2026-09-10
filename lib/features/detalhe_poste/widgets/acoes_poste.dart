@@ -100,19 +100,21 @@ class _AcoesPosteState extends ConsumerState<AcoesPoste> {
           top: BorderSide(color: BrutColors.line, width: BrutStroke.bold),
         ),
       ),
-      child: Row(
-        children: [
-          // Em falha, a manutenção vem primeiro e mais larga.
-          if (emFalha) ...[
-            Expanded(flex: 3, child: botaoStatus),
-            const SizedBox(width: BrutSpacing.sm),
-            Expanded(flex: 2, child: botaoMapa),
-          ] else ...[
-            Expanded(child: botaoMapa),
-            const SizedBox(width: BrutSpacing.sm),
-            Expanded(child: botaoStatus),
-          ],
-        ],
+      // Ações empilhadas: sempre cabem em largura de celular. Em falha, a
+      // manutenção vem primeiro (priorizada).
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: emFalha
+            ? [
+                botaoStatus,
+                const SizedBox(height: BrutSpacing.sm),
+                botaoMapa,
+              ]
+            : [
+                botaoMapa,
+                const SizedBox(height: BrutSpacing.sm),
+                botaoStatus,
+              ],
       ),
     );
   }
