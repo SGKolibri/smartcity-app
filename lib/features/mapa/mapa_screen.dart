@@ -28,6 +28,10 @@ class MapaScreen extends ConsumerStatefulWidget {
 class _MapaScreenState extends ConsumerState<MapaScreen> {
   final _mapController = MapController();
 
+  /// Poste que ainda não foi centralizado porque a lista não tinha chegado
+  /// quando a seleção veio de outra tela (detalhe / ranking de KPIs).
+  String? _centralizarPendente;
+
   @override
   void dispose() {
     _mapController.dispose();
@@ -40,6 +44,19 @@ class _MapaScreenState extends ConsumerState<MapaScreen> {
         builder: (_) => DetalhePosteScreen(posteId: posteId),
       ),
     );
+  }
+
+  /// Move o mapa até o poste. Se ainda não está na lista, guarda para depois.
+  void _centralizarNoPoste(String id, List<PosteResumo> postes) {
+    for (final p in postes) {
+      if (p.id == id) {
+        final zoom = _mapController.camera.zoom;
+        _mapController.move(p.posicao, zoom < 16 ? 16 : zoom);
+        _centralizarPendente = null;
+        return;
+      }
+    }
+    _centralizarPendente = id;
   }
 
   @override
@@ -62,6 +79,21 @@ class _MapaScreenState extends ConsumerState<MapaScreen> {
           break;
         }
       }
+    }
+
+    // Sincroniza seleção (mapa ⇄ detalhe ⇄ KPIs): quando a seleção muda por
+    // outra tela, centraliza o mapa no poste.
+    ref.listen(posteSelecionadoProvider, (anterior, atual) {
+      if (atual != null && atual != anterior) {
+        _centralizarNoPoste(atual, postes);
+      }
+    });
+    // Tenta resolver uma centralização pendente assim que a lista chega.
+    if (_centralizarPendente != null && postes.isNotEmpty) {
+      final pendente = _centralizarPendente!;
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) _centralizarNoPoste(pendente, postes);
+      });
     }
 
     return Stack(
@@ -94,15 +126,9 @@ class _MapaScreenState extends ConsumerState<MapaScreen> {
                     child: PosteMarker(
                       status: p.status,
                       selecionado: p.id == selecionadoId,
-                      onTap: () {
-                        ref
-                            .read(posteSelecionadoProvider.notifier)
-                            .selecionar(p.id);
-                        _mapController.move(
-                          p.posicao,
-                          _mapController.camera.zoom,
-                        );
-                      },
+                      onTap: () => ref
+                          .read(posteSelecionadoProvider.notifier)
+                          .selecionar(p.id),
                     ),
                   ),
               ],
