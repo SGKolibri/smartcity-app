@@ -10,9 +10,12 @@ import 'luminosidade_bar.dart';
 
 /// Consumo em tempo real + barra de luminosidade (PRD §5.2).
 class ConsumoAoVivo extends StatelessWidget {
-  const ConsumoAoVivo({super.key, required this.poste});
+  const ConsumoAoVivo({super.key, required this.poste, this.aoVivo = false});
 
   final Poste poste;
+
+  /// Conexão WebSocket ativa (fase 5).
+  final bool aoVivo;
 
   @override
   Widget build(BuildContext context) {
@@ -28,7 +31,7 @@ class ConsumoAoVivo extends StatelessWidget {
             children: [
               Text('CONSUMO', style: BrutType.label(10)),
               const Spacer(),
-              LiveIndicator(active: temTelemetria),
+              LiveIndicator(active: aoVivo && temTelemetria),
             ],
           ),
           const SizedBox(height: BrutSpacing.sm),
