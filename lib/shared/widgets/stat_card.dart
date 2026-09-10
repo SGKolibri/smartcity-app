@@ -127,11 +127,15 @@ class _Delta extends StatelessWidget {
           style: BrutType.mono(12, weight: FontWeight.w600, color: color),
         ),
         const SizedBox(width: 4),
-        Text(
-          'vs. anterior',
-          style: BrutType.sans(
-            11,
-            color: onDark ? BrutColors.paper : BrutColors.inkMuted,
+        Flexible(
+          child: Text(
+            'vs. anterior',
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: BrutType.sans(
+              11,
+              color: onDark ? BrutColors.paper : BrutColors.inkMuted,
+            ),
           ),
         ),
       ],
