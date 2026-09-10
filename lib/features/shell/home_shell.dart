@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/theme/brut_colors.dart';
 import '../../core/theme/brut_spacing.dart';
@@ -6,28 +7,26 @@ import '../../core/theme/brut_typography.dart';
 import '../design_system/design_system_screen.dart';
 import '../kpis/kpis_screen.dart';
 import '../mapa/mapa_screen.dart';
+import 'shell_providers.dart';
 
 /// Casca de navegação entre as telas principais. A integração completa
 /// mapa ⇄ detalhe ⇄ KPIs é fechada na fase 6; por ora um `IndexedStack`
 /// simples com a galeria do design system incluída para validação visual.
-class HomeShell extends StatefulWidget {
+class HomeShell extends ConsumerWidget {
   const HomeShell({super.key});
 
-  @override
-  State<HomeShell> createState() => _HomeShellState();
-}
-
-class _HomeShellState extends State<HomeShell> {
-  int _index = 0;
-
-  static const _tabs = <_Tab>[
-    _Tab('Mapa', Icons.map_outlined, MapaScreen()),
-    _Tab('KPIs', Icons.bar_chart_outlined, KpisScreen()),
-    _Tab('Design', Icons.grid_view_outlined, DesignSystemScreen()),
+  static const _tabs = <_TabDef>[
+    _TabDef(HomeTab.mapa, 'Mapa', Icons.map_outlined, MapaScreen()),
+    _TabDef(HomeTab.kpis, 'KPIs', Icons.bar_chart_outlined, KpisScreen()),
+    _TabDef(HomeTab.design, 'Design', Icons.grid_view_outlined,
+        DesignSystemScreen()),
   ];
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final tab = ref.watch(homeTabProvider);
+    final index = _tabs.indexWhere((t) => t.tab == tab);
+
     return Scaffold(
       appBar: AppBar(
         title: Column(
@@ -41,7 +40,7 @@ class _HomeShellState extends State<HomeShell> {
         ),
       ),
       body: IndexedStack(
-        index: _index,
+        index: index,
         children: [for (final t in _tabs) t.screen],
       ),
       bottomNavigationBar: DecoratedBox(
@@ -51,11 +50,12 @@ class _HomeShellState extends State<HomeShell> {
           ),
         ),
         child: NavigationBar(
-          selectedIndex: _index,
+          selectedIndex: index,
           backgroundColor: BrutColors.surface,
           indicatorColor: BrutColors.ink,
           surfaceTintColor: Colors.transparent,
-          onDestinationSelected: (i) => setState(() => _index = i),
+          onDestinationSelected: (i) =>
+              ref.read(homeTabProvider.notifier).ir(_tabs[i].tab),
           destinations: [
             for (final t in _tabs)
               NavigationDestination(
@@ -70,9 +70,10 @@ class _HomeShellState extends State<HomeShell> {
   }
 }
 
-class _Tab {
-  const _Tab(this.label, this.icon, this.screen);
+class _TabDef {
+  const _TabDef(this.tab, this.label, this.icon, this.screen);
 
+  final HomeTab tab;
   final String label;
   final IconData icon;
   final Widget screen;

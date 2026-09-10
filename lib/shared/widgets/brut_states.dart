@@ -98,13 +98,16 @@ class BrutEmpty extends StatelessWidget {
   Widget build(BuildContext context) {
     return Center(
       child: Padding(
-        padding: const EdgeInsets.all(BrutSpacing.xl),
+        padding: const EdgeInsets.symmetric(
+          horizontal: BrutSpacing.xl,
+          vertical: BrutSpacing.lg,
+        ),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
             if (icon != null) ...[
-              Icon(icon, color: BrutColors.inkMuted, size: 28),
-              const SizedBox(height: BrutSpacing.sm),
+              Icon(icon, color: BrutColors.inkMuted, size: 24),
+              const SizedBox(height: BrutSpacing.xs),
             ],
             Text(
               message,

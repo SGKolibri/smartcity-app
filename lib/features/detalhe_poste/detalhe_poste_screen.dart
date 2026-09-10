@@ -1,20 +1,80 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../core/theme/brut_colors.dart';
+import '../../core/theme/brut_spacing.dart';
+import '../../core/theme/brut_typography.dart';
 import '../../shared/widgets/widgets.dart';
+import 'detalhe_providers.dart';
+import 'widgets/acoes_poste.dart';
+import 'widgets/cabecalho_poste.dart';
+import 'widgets/consumo_ao_vivo.dart';
+import 'widgets/historico_consumo.dart';
+import 'widgets/log_eventos.dart';
+import 'widgets/texto_contextual.dart';
 
-/// Fase 3 · Tela Detalhe do poste. Placeholder até a implementação.
-class DetalhePosteScreen extends StatelessWidget {
+/// Fase 3 · Tela Detalhe do poste.
+class DetalhePosteScreen extends ConsumerWidget {
   const DetalhePosteScreen({super.key, required this.posteId});
 
   final String posteId;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final async = ref.watch(posteDetalheProvider(posteId));
+    final eventos = ref.watch(eventosProvider(posteId)).value;
+
     return Scaffold(
-      appBar: AppBar(title: const Text('Detalhe do poste')),
-      body: const BrutEmpty(
-        message: 'Detalhe do poste — em construção (fase 3).',
-        icon: Icons.lightbulb_outline,
+      appBar: AppBar(
+        title: Text(
+          async.value?.codigo ?? 'Poste',
+          style: BrutType.mono(18, weight: FontWeight.w700),
+        ),
+      ),
+      body: async.when(
+        loading: () => const BrutLoading(),
+        error: (e, _) => BrutError(
+          error: e,
+          onRetry: () => ref.invalidate(posteDetalheProvider(posteId)),
+        ),
+        data: (poste) => Column(
+          children: [
+            Expanded(
+              child: RefreshIndicator(
+                color: BrutColors.ink,
+                onRefresh: () async {
+                  ref.invalidate(posteDetalheProvider(posteId));
+                  ref.invalidate(telemetriaProvider(posteId));
+                  ref.invalidate(eventosProvider(posteId));
+                  await ref.read(posteDetalheProvider(posteId).future);
+                },
+                child: ListView(
+                  padding: EdgeInsets.zero,
+                  children: [
+                    CabecalhoPoste(poste: poste),
+                    Padding(
+                      padding: const EdgeInsets.all(BrutSpacing.lg),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          ConsumoAoVivo(poste: poste),
+                          const SizedBox(height: BrutSpacing.md),
+                          TextoContextual(poste: poste, eventos: eventos),
+                          const SizedBox(height: BrutSpacing.xl),
+                          HistoricoConsumo(posteId: posteId),
+                          const SizedBox(height: BrutSpacing.xl),
+                          LogEventos(posteId: posteId),
+                          const SizedBox(height: BrutSpacing.lg),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+            AcoesPoste(poste: poste),
+          ],
+        ),
       ),
     );
   }
