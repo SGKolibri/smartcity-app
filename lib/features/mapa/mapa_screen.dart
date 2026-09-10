@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../core/realtime/realtime_providers.dart';
 import '../../core/theme/brut_colors.dart';
 import '../../core/theme/brut_spacing.dart';
 import '../../core/theme/brut_typography.dart';
@@ -46,8 +47,13 @@ class _MapaScreenState extends ConsumerState<MapaScreen> {
     final postesAsync = ref.watch(postesMapaProvider);
     final selecionadoId = ref.watch(posteSelecionadoProvider);
     final heatmapOn = ref.watch(heatmapVisivelProvider);
+    final aoVivo = ref.watch(mapaAoVivoProvider);
 
-    final postes = postesAsync.value ?? const <PosteResumo>[];
+    final restPostes = postesAsync.value ?? const <PosteResumo>[];
+    // Marcadores refletem o estado ao vivo quando disponível (fase 5).
+    final postes = aoVivo.isEmpty
+        ? restPostes
+        : [for (final p in restPostes) aoVivo[p.id] ?? p];
     PosteResumo? selecionado;
     if (selecionadoId != null) {
       for (final p in postes) {
@@ -182,6 +188,7 @@ class _Cabecalho extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final filtroAtivo = ref.watch(mapaFiltroProvider).ativo;
+    final aoVivo = ref.watch(aoVivoProvider);
     final texto = filtroAtivo ? '$total / $kTotalPostesRede' : '$total';
 
     return Container(
@@ -209,14 +216,13 @@ class _Cabecalho extends ConsumerWidget {
               ),
             ),
           ],
+          const SizedBox(width: BrutSpacing.sm),
+          LiveIndicator(active: aoVivo),
           const Spacer(),
           GestureDetector(
             onTap: onToggleHeatmap,
             child: Container(
-              padding: const EdgeInsets.symmetric(
-                horizontal: BrutSpacing.sm,
-                vertical: 6,
-              ),
+              padding: const EdgeInsets.all(6),
               decoration: BoxDecoration(
                 color: heatmapOn ? BrutColors.ink : BrutColors.surface,
                 border: Border.all(
@@ -224,25 +230,10 @@ class _Cabecalho extends ConsumerWidget {
                   width: BrutStroke.thin,
                 ),
               ),
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Icon(
-                    Icons.blur_on,
-                    size: 14,
-                    color: heatmapOn ? BrutColors.paper : BrutColors.ink,
-                  ),
-                  const SizedBox(width: 4),
-                  Text(
-                    'HEATMAP',
-                    style: BrutType.mono(
-                      10,
-                      weight: FontWeight.w700,
-                      color: heatmapOn ? BrutColors.paper : BrutColors.ink,
-                      letterSpacing: 1,
-                    ),
-                  ),
-                ],
+              child: Icon(
+                Icons.blur_on,
+                size: 16,
+                color: heatmapOn ? BrutColors.paper : BrutColors.ink,
               ),
             ),
           ),

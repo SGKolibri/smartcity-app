@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../core/realtime/realtime_providers.dart';
 import '../../core/theme/brut_colors.dart';
 import '../../core/theme/brut_spacing.dart';
 import '../../core/theme/brut_typography.dart';
@@ -23,6 +24,8 @@ class DetalhePosteScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final async = ref.watch(posteDetalheProvider(posteId));
     final eventos = ref.watch(eventosProvider(posteId)).value;
+    final live = ref.watch(posteAoVivoProvider(posteId)).value;
+    final aoVivo = ref.watch(aoVivoProvider);
 
     return Scaffold(
       appBar: AppBar(
@@ -37,8 +40,17 @@ class DetalhePosteScreen extends ConsumerWidget {
           error: e,
           onRetry: () => ref.invalidate(posteDetalheProvider(posteId)),
         ),
-        data: (poste) => Column(
-          children: [
+        data: (posteRest) {
+          final poste = live == null
+              ? posteRest
+              : posteRest.comAoVivo(
+                  status: live.status,
+                  luminosidadeAtual: live.luminosidadeAtual,
+                  consumoInstantaneoKw: live.consumoInstantaneoKw,
+                  ultimaLeituraEm: live.ultimaLeituraEm,
+                );
+          return Column(
+            children: [
             Expanded(
               child: RefreshIndicator(
                 color: BrutColors.ink,
@@ -57,7 +69,7 @@ class DetalhePosteScreen extends ConsumerWidget {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          ConsumoAoVivo(poste: poste),
+                          ConsumoAoVivo(poste: poste, aoVivo: aoVivo),
                           const SizedBox(height: BrutSpacing.md),
                           TextoContextual(poste: poste, eventos: eventos),
                           const SizedBox(height: BrutSpacing.xl),
@@ -72,9 +84,10 @@ class DetalhePosteScreen extends ConsumerWidget {
                 ),
               ),
             ),
-            AcoesPoste(poste: poste),
-          ],
-        ),
+              AcoesPoste(poste: poste),
+            ],
+          );
+        },
       ),
     );
   }
