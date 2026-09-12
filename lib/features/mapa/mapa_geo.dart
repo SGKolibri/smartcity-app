@@ -5,7 +5,7 @@ import '../../shared/models/poste.dart';
 /// Parâmetros geográficos de Itaguari, GO (rede fixa do mock — PRD §3).
 abstract final class MapaGeo {
   /// Centro aproximado da cidade, entre os postes do seed.
-  static const LatLng centroItaguari = LatLng(-15.9535, -49.5928);
+  static const LatLng centroItaguari = LatLng(-15.920801, -49.606172);
 
   static const double zoomInicial = 15.2;
   static const double zoomMin = 12;
